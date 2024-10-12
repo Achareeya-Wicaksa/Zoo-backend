@@ -26,5 +26,12 @@ func (s *ZooService) UpdateZoo(zoo models.Zoo) error {
 }
 
 func (s *ZooService) DeleteZoo(id int) error {
-    return s.Repo.Delete(id)
+    // Cek apakah zoo dengan ID tersebut ada
+    existingZoo, err := s.Repo.GetByID(id) // Ganti dengan GetByID
+    if err != nil {
+        return err // Jika tidak ditemukan, kembalikan error
+    }
+
+    // Jika ada, hapus zoo
+    return s.Repo.Delete(existingZoo.ID) // Panggil metode Delete dengan ID
 }

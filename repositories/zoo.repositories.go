@@ -49,7 +49,9 @@ func (r *ZooRepository) Update(zoo models.Zoo) error {
 	return err
 }
 
+// In repositories/zoo_repository.go
 func (r *ZooRepository) Delete(id int) error {
-	_, err := r.DB.Exec("DELETE FROM animal WHERE id = ?", id)
-	return err
+    _, err := r.DB.Exec("DELETE FROM animal WHERE id = ?", id)
+    return err
 }
+
