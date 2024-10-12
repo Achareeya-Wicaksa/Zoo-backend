@@ -9,6 +9,7 @@ import (
     "zoo-backend/migrations"
     "zoo-backend/repositories"
     "zoo-backend/services"
+    "zoo-backend/middleware" 
 )
 
 func main() {
@@ -19,10 +20,11 @@ func main() {
     zooService := &services.ZooService{Repo: zooRepo}
     zooController := &controllers.ZooController{Service: zooService}
 
-    // Menggunakan gorilla/mux untuk routing
+    
     router := mux.NewRouter()
 
-    // Mengatur route untuk HTTP methods yang sesuai
+    router.Use(middleware.LoggerMiddleware)
+
     router.HandleFunc("/zoos", zooController.GetAllZoos).Methods(http.MethodGet)
     router.HandleFunc("/zoos", zooController.CreateZoo).Methods(http.MethodPost)
     router.HandleFunc("/zoos/{id}", zooController.GetZooByID).Methods(http.MethodGet) // Mendapatkan berdasarkan ID

@@ -18,7 +18,7 @@ func (r *ZooRepository) Create(zoo models.Zoo) (int64, error) {
 }
 
 func (r *ZooRepository) GetAll() ([]models.Zoo, error) {
-	rows, err := r.DB.Query("SELECT id, name, class, legs FROM testbackendzoo")
+	rows, err := r.DB.Query("SELECT id, name, class, legs FROM animal")
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r *ZooRepository) GetAll() ([]models.Zoo, error) {
 
 func (r *ZooRepository) GetByID(id int) (models.Zoo, error) {
 	var zoo models.Zoo
-	err := r.DB.QueryRow("SELECT id, name, class, legs FROM testbackendzoo WHERE id = ?", id).Scan(&zoo.ID, &zoo.Name, &zoo.Class, &zoo.Legs)
+	err := r.DB.QueryRow("SELECT id, name, class, legs FROM animal WHERE id = ?", id).Scan(&zoo.ID, &zoo.Name, &zoo.Class, &zoo.Legs)
 	if err != nil {
 		return zoo, err
 	}
@@ -45,11 +45,11 @@ func (r *ZooRepository) GetByID(id int) (models.Zoo, error) {
 }
 
 func (r *ZooRepository) Update(zoo models.Zoo) error {
-	_, err := r.DB.Exec("UPDATE testbackendzoo SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
+	_, err := r.DB.Exec("UPDATE animal SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
 	return err
 }
 
 func (r *ZooRepository) Delete(id int) error {
-	_, err := r.DB.Exec("DELETE FROM testbackendzoo WHERE id = ?", id)
+	_, err := r.DB.Exec("DELETE FROM animal WHERE id = ?", id)
 	return err
 }
