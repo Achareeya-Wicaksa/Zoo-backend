@@ -97,6 +97,8 @@ func (c *ZooController) GetZooByID(w http.ResponseWriter, r *http.Request) {
 // UpdateZoo - Untuk memperbarui zoo
 func (c *ZooController) UpdateZoo(w http.ResponseWriter, r *http.Request) {
     var zoo models.Zoo
+
+    // Decode the incoming JSON request into the Zoo model
     err := json.NewDecoder(r.Body).Decode(&zoo)
     if err != nil {
         http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -104,6 +106,14 @@ func (c *ZooController) UpdateZoo(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Ensure that the Zoo ID is present (since it's needed for the update)
+    if zoo.ID == 0 {
+        http.Error(w, "Missing Zoo ID", http.StatusBadRequest)
+        log.Printf("UpdateZoo failed: Missing Zoo ID") // Logging
+        return
+    }
+
+    // Call the service to update the zoo
     err = c.Service.UpdateZoo(zoo)
     if err != nil {
         http.Error(w, "Failed to update zoo", http.StatusInternalServerError)
@@ -111,7 +121,7 @@ func (c *ZooController) UpdateZoo(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Berikan notifikasi sukses
+    // Return a success response
     response := map[string]string{
         "message": "Zoo updated successfully",
     }

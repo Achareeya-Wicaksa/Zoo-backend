@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"zoo-backend/models"
 	"log"
+	"fmt"
 )
 
 type ZooRepository struct {
@@ -50,9 +51,34 @@ func (r *ZooRepository) GetByID(id int) (models.Zoo, error) {
 }
 
 func (r *ZooRepository) Update(zoo models.Zoo) error {
-	_, err := r.DB.Exec("UPDATE animal SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
-	return err
+    // Log the incoming zoo details to check if ID and other fields are correct
+    log.Printf("ZooRepository Update: Updating zoo with ID %d, Name: %s, Class: %s, Legs: %d", zoo.ID, zoo.Name, zoo.Class, zoo.Legs)
+
+    // Execute the UPDATE query
+    result, err := r.DB.Exec("UPDATE animal SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
+    if err != nil {
+        log.Printf("ZooRepository Update failed: %v", err)
+        return err
+    }
+
+    // Check how many rows were affected by the UPDATE
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        log.Printf("ZooRepository Update: Failed to retrieve rows affected: %v", err)
+        return err
+    }
+
+    // Log if no rows were affected, which indicates no update took place
+    if rowsAffected == 0 {
+        log.Printf("ZooRepository Update: No rows were affected. Possible incorrect ID or no changes.")
+        return fmt.Errorf("no rows were affected by the update")
+    }
+
+    // Log success if rows were updated
+    log.Printf("ZooRepository Update: Successfully updated %d row(s)", rowsAffected)
+    return nil
 }
+
 
 // In repositories/zoo_repository.go
 func (r *ZooRepository) Delete(id int) error {
