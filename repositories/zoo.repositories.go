@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"zoo-backend/models"
+	"log"
 )
 
 type ZooRepository struct {
@@ -10,12 +11,16 @@ type ZooRepository struct {
 }
 
 func (r *ZooRepository) Create(zoo models.Zoo) (int64, error) {
-	result, err := r.DB.Exec("INSERT INTO  (name, class, legs) VALUES (?, ?, ?)", zoo.Name, zoo.Class, zoo.Legs)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+    // Make sure to log the exact SQL error for debugging purposes
+    result, err := r.DB.Exec("INSERT INTO animal (name, class, legs) VALUES (?, ?, ?)", zoo.Name, zoo.Class, zoo.Legs)
+    if err != nil {
+        // Log the error with context
+        log.Printf("SQL Exec error: %v", err)  // Log the SQL error
+        return 0, err
+    }
+    return result.LastInsertId()
 }
+
 
 func (r *ZooRepository) GetAll() ([]models.Zoo, error) {
 	rows, err := r.DB.Query("SELECT id, name, class, legs FROM animal")
