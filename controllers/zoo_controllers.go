@@ -9,6 +9,7 @@ import (
     "zoo-backend/models"
     "zoo-backend/services"
     "log" // Tambahkan import ini untuk logging
+    "fmt" // Tambahkan import ini untuk logging
 )
 
 type ZooController struct {
@@ -19,7 +20,7 @@ type ZooController struct {
 func (c *ZooController) CreateZoo(w http.ResponseWriter, r *http.Request) {
     var zoo models.Zoo
 
-    // Decode body menjadi struct Zoo
+    // Decode the request body into the Zoo struct
     err := json.NewDecoder(r.Body).Decode(&zoo)
     if err != nil {
         w.WriteHeader(http.StatusBadRequest)
@@ -28,7 +29,7 @@ func (c *ZooController) CreateZoo(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Pastikan data yang diterima valid
+    // Ensure the data is valid
     if zoo.Name == "" || zoo.Class == "" || zoo.Legs <= 0 {
         w.WriteHeader(http.StatusBadRequest)
         json.NewEncoder(w).Encode(map[string]string{"error": "Invalid data provided"})
@@ -36,16 +37,22 @@ func (c *ZooController) CreateZoo(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Memanggil service untuk membuat zoo baru
+    // Call service to create a new zoo
     id, err := c.Service.CreateZoo(zoo)
     if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create zoo"})
-        log.Printf("CreateZoo failed: %v", err) // Logging
+        if err.Error() == fmt.Sprintf("zoo with ID '%d' already exists", zoo.ID) {
+            w.WriteHeader(http.StatusConflict) // 409 Conflict
+            json.NewEncoder(w).Encode(map[string]string{"error": "Zoo with this ID already exists"})
+            log.Printf("CreateZoo conflict: Zoo with ID '%d' already exists", zoo.ID) // Logging
+        } else {
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create zoo"})
+            log.Printf("CreateZoo failed: %v", err) // Logging
+        }
         return
     }
 
-    // Jika berhasil, kirim response success
+    // If successful, send success response
     w.WriteHeader(http.StatusCreated)
     json.NewEncoder(w).Encode(map[string]interface{}{
         "message": "Successfully created zoo",
@@ -53,6 +60,7 @@ func (c *ZooController) CreateZoo(w http.ResponseWriter, r *http.Request) {
     })
     log.Printf("CreateZoo succeeded: Zoo created with ID %d", id) // Logging
 }
+
 
 // GetAllZoos - Untuk mendapatkan semua zoo
 func (c *ZooController) GetAllZoos(w http.ResponseWriter, r *http.Request) {

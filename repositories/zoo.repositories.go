@@ -12,15 +12,27 @@ type ZooRepository struct {
 }
 
 func (r *ZooRepository) Create(zoo models.Zoo) (int64, error) {
-    // Make sure to log the exact SQL error for debugging purposes
-    result, err := r.DB.Exec("INSERT INTO animal (name, class, legs) VALUES (?, ?, ?)", zoo.Name, zoo.Class, zoo.Legs)
+    var existingID int64
+    // Check if the ID already exists in the database
+    err := r.DB.QueryRow("SELECT id FROM animal WHERE id = ?", zoo.ID).Scan(&existingID)
+    if err == nil {
+        // ID already exists, return a conflict error
+        return 0, fmt.Errorf("zoo with ID '%d' already exists", zoo.ID)
+    } else if err != sql.ErrNoRows {
+        // Another error occurred, return it
+        log.Printf("SQL error during check for existing zoo: %v", err) // Logging
+        return 0, err
+    }
+
+    // Insert the new zoo into the database
+    result, err := r.DB.Exec("INSERT INTO animal (id, name, class, legs) VALUES (?, ?, ?, ?)", zoo.ID, zoo.Name, zoo.Class, zoo.Legs)
     if err != nil {
-        // Log the error with context
-        log.Printf("SQL Exec error: %v", err)  // Log the SQL error
+        log.Printf("SQL Exec error: %v", err) // Log the SQL error
         return 0, err
     }
     return result.LastInsertId()
 }
+
 
 
 func (r *ZooRepository) GetAll() ([]models.Zoo, error) {
