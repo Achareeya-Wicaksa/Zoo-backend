@@ -64,6 +64,7 @@ func (c *ZooController) CreateZoo(w http.ResponseWriter, r *http.Request) {
 
 // GetAllZoos - Untuk mendapatkan semua zoo
 func (c *ZooController) GetAllZoos(w http.ResponseWriter, r *http.Request) {
+    // Panggil service untuk mendapatkan semua data zoo
     zoos, err := c.Service.GetAllZoos()
     if err != nil {
         http.Error(w, "Failed to get zoos", http.StatusInternalServerError)
@@ -71,11 +72,14 @@ func (c *ZooController) GetAllZoos(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Jika data kosong, kirim array kosong []
+    // Jika data kosong, kembalikan 404 Not Found
     if len(zoos) == 0 {
-        zoos = []models.Zoo{}
+        http.Error(w, "No zoos found", http.StatusNotFound)
+        log.Printf("GetAllZoos failed: No zoos found") // Logging ketika tidak ada data
+        return
     }
 
+    // Jika data ditemukan, kirimkan dalam bentuk JSON dengan status 200
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(zoos)
@@ -83,6 +87,7 @@ func (c *ZooController) GetAllZoos(w http.ResponseWriter, r *http.Request) {
     // Logging status dan jumlah data yang dikembalikan
     log.Printf("GetAllZoos succeeded: Returned %d zoos with status %d", len(zoos), http.StatusOK)
 }
+
 
 // GetZooByID - Untuk mendapatkan zoo berdasarkan ID
 func (c *ZooController) GetZooByID(w http.ResponseWriter, r *http.Request) {
@@ -114,31 +119,41 @@ func (c *ZooController) UpdateZoo(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Ensure that the Zoo ID is present (since it's needed for the update)
+    // Ensure that the Zoo ID is present (since it's needed for the update or insert)
     if zoo.ID == 0 {
         http.Error(w, "Missing Zoo ID", http.StatusBadRequest)
         log.Printf("UpdateZoo failed: Missing Zoo ID") // Logging
         return
     }
 
-    // Call the service to update the zoo
-    err = c.Service.UpdateZoo(zoo)
+    // Call the service to upsert the zoo (either update or insert)
+    updated, err := c.Service.UpsertZoo(zoo)
     if err != nil {
-        http.Error(w, "Failed to update zoo", http.StatusInternalServerError)
-        log.Printf("UpdateZoo failed: %v", err) // Logging
+        http.Error(w, "Failed to update or create zoo", http.StatusInternalServerError)
+        log.Printf("UpsertZoo failed: %v", err) // Logging
         return
     }
 
-    // Return a success response
+    // Prepare the response based on whether it was an update or an insert
+    var message string
+    if updated {
+        message = fmt.Sprintf("Zoo with ID %d was successfully updated", zoo.ID)
+    } else {
+        message = fmt.Sprintf("Zoo with ID %d not found and successfully created", zoo.ID)
+    }
+
+    // Return the appropriate response
     response := map[string]string{
-        "message": "Zoo updated successfully",
+        "message": message,
     }
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(response)
-    log.Printf("UpdateZoo succeeded: Updated zoo with ID %d", zoo.ID) // Logging
+    log.Printf("UpsertZoo succeeded: %s", message) // Logging
 }
+
+
 
 // DeleteZoo - Untuk menghapus zoo
 func (c *ZooController) DeleteZoo(w http.ResponseWriter, r *http.Request) {

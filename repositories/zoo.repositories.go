@@ -62,34 +62,42 @@ func (r *ZooRepository) GetByID(id int) (models.Zoo, error) {
 	return zoo, nil
 }
 
-func (r *ZooRepository) Update(zoo models.Zoo) error {
-    // Log the incoming zoo details to check if ID and other fields are correct
-    log.Printf("ZooRepository Update: Updating zoo with ID %d, Name: %s, Class: %s, Legs: %d", zoo.ID, zoo.Name, zoo.Class, zoo.Legs)
+func (r *ZooRepository) Upsert(zoo models.Zoo) (bool, error) {
+    // First, check if a zoo with the given ID exists
+    var existingID int64
+    err := r.DB.QueryRow("SELECT id FROM animal WHERE id = ?", zoo.ID).Scan(&existingID)
+    if err == nil {
+        // If the ID exists, perform an update
+        result, err := r.DB.Exec("UPDATE animal SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
+        if err != nil {
+            log.Printf("ZooRepository Upsert: Update failed: %v", err)
+            return false, err
+        }
 
-    // Execute the UPDATE query
-    result, err := r.DB.Exec("UPDATE animal SET name = ?, class = ?, legs = ? WHERE id = ?", zoo.Name, zoo.Class, zoo.Legs, zoo.ID)
+        rowsAffected, err := result.RowsAffected()
+        if err != nil {
+            log.Printf("ZooRepository Upsert: Failed to retrieve rows affected during update: %v", err)
+            return false, err
+        }
+
+        log.Printf("ZooRepository Upsert: Updated zoo with ID %d. Rows affected: %d", zoo.ID, rowsAffected)
+        return true, nil // Return true indicating that an update occurred
+    } else if err != sql.ErrNoRows {
+        log.Printf("ZooRepository Upsert: Error while checking for existing zoo: %v", err)
+        return false, err
+    }
+
+    // If the ID does not exist, insert a new record
+    _, err = r.DB.Exec("INSERT INTO animal (id, name, class, legs) VALUES (?, ?, ?, ?)", zoo.ID, zoo.Name, zoo.Class, zoo.Legs)
     if err != nil {
-        log.Printf("ZooRepository Update failed: %v", err)
-        return err
+        log.Printf("ZooRepository Upsert: Insert failed: %v", err)
+        return false, err
     }
 
-    // Check how many rows were affected by the UPDATE
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        log.Printf("ZooRepository Update: Failed to retrieve rows affected: %v", err)
-        return err
-    }
-
-    // Log if no rows were affected, which indicates no update took place
-    if rowsAffected == 0 {
-        log.Printf("ZooRepository Update: No rows were affected. Possible incorrect ID or no changes.")
-        return fmt.Errorf("no rows were affected by the update")
-    }
-
-    // Log success if rows were updated
-    log.Printf("ZooRepository Update: Successfully updated %d row(s)", rowsAffected)
-    return nil
+    log.Printf("ZooRepository Upsert: Inserted new zoo with ID %d", zoo.ID)
+    return false, nil // Return false indicating that an insert occurred
 }
+
 
 
 // In repositories/zoo_repository.go
