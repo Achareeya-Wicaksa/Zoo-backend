@@ -28,12 +28,10 @@ func (s *ZooService) UpsertZoo(zoo models.Zoo) (bool, error) {
 
 
 func (s *ZooService) DeleteZoo(id int) error {
-    // Cek apakah zoo dengan ID tersebut ada
-    existingZoo, err := s.Repo.GetByID(id) // Ganti dengan GetByID
+    existingZoo, err := s.Repo.GetByID(id) 
     if err != nil {
-        return err // Jika tidak ditemukan, kembalikan error
+        return err 
     }
 
-    // Jika ada, hapus zoo
-    return s.Repo.Delete(existingZoo.ID) // Panggil metode Delete dengan ID
+    return s.Repo.Delete(existingZoo.ID) 
 }
