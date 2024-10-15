@@ -27,9 +27,9 @@ func main() {
 
     router.HandleFunc("/zoos", zooController.GetAllZoos).Methods(http.MethodGet)
     router.HandleFunc("/zoos", zooController.CreateZoo).Methods(http.MethodPost)
-    router.HandleFunc("/zoos/{id}", zooController.GetZooByID).Methods(http.MethodGet) // Mendapatkan berdasarkan ID
-    router.HandleFunc("/zoos/{id}", zooController.UpdateZoo).Methods(http.MethodPut) // Memperbarui berdasarkan ID
-    router.HandleFunc("/zoos/{id}", zooController.DeleteZoo).Methods(http.MethodDelete) // Menghapus berdasarkan ID
+    router.HandleFunc("/zoos/{id}", zooController.GetZooByID).Methods(http.MethodGet) 
+    router.HandleFunc("/zoos/{id}", zooController.UpdateZoo).Methods(http.MethodPut) 
+    router.HandleFunc("/zoos/{id}", zooController.DeleteZoo).Methods(http.MethodDelete) 
 
     log.Println("Server starting on :8080")
     log.Fatal(http.ListenAndServe(":8080", router))

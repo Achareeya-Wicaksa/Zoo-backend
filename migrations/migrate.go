@@ -8,10 +8,10 @@ import (
 func Migrate() {
 	query := `
     CREATE TABLE IF NOT EXISTS animal (
-        id INT AUTO_INCREMENT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         class VARCHAR(255) NOT NULL,
-        legs INT(255) NOT NULL
+        legs INT NOT NULL
     );`
 	if _, err := config.DB.Exec(query); err != nil {
 		log.Fatal("Error creating table: ", err)
