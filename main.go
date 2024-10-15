@@ -3,13 +3,15 @@ package main
 import (
     "log"
     "net/http"
+    "os"
+
     "github.com/gorilla/mux"
     "zoo-backend/config"
     "zoo-backend/controllers"
     "zoo-backend/migrations"
     "zoo-backend/repositories"
     "zoo-backend/services"
-    "zoo-backend/middleware" 
+    "zoo-backend/middleware"
 )
 
 func main() {
@@ -20,17 +22,20 @@ func main() {
     zooService := &services.ZooService{Repo: zooRepo}
     zooController := &controllers.ZooController{Service: zooService}
 
-    
     router := mux.NewRouter()
-
     router.Use(middleware.LoggerMiddleware)
 
     router.HandleFunc("/zoos", zooController.GetAllZoos).Methods(http.MethodGet)
     router.HandleFunc("/zoos", zooController.CreateZoo).Methods(http.MethodPost)
-    router.HandleFunc("/zoos/{id}", zooController.GetZooByID).Methods(http.MethodGet) 
-    router.HandleFunc("/zoos/{id}", zooController.UpdateZoo).Methods(http.MethodPut) 
-    router.HandleFunc("/zoos/{id}", zooController.DeleteZoo).Methods(http.MethodDelete) 
+    router.HandleFunc("/zoos/{id}", zooController.GetZooByID).Methods(http.MethodGet)
+    router.HandleFunc("/zoos/{id}", zooController.UpdateZoo).Methods(http.MethodPut)
+    router.HandleFunc("/zoos/{id}", zooController.DeleteZoo).Methods(http.MethodDelete)
 
-    log.Println("Server starting on :8080")
-    log.Fatal(http.ListenAndServe(":8080", router))
+    port := os.Getenv("PORT") // Ambil port dari variabel lingkungan
+    if port == "" {
+        port = "8080" // Default ke 8080 jika tidak ada variabel lingkungan
+    }
+
+    log.Printf("Server starting on :%s\n", port)
+    log.Fatal(http.ListenAndServe(":"+port, router))
 }
