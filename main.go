@@ -42,5 +42,5 @@ func main() {
     }
 
     log.Printf("Server starting on :%s\n", port)
-    log.Fatal(http.ListenAndServe(":"+port, router))
+    log.Fatal(http.ListenAndServe("0.0.0.0:"+port, router))
 }
