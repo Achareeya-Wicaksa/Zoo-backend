@@ -4,6 +4,7 @@ import (
     "log"
     "net/http"
     "os"
+    "fmt"
 
     "github.com/gorilla/mux"
     "zoo-backend/config"
@@ -24,6 +25,10 @@ func main() {
 
     router := mux.NewRouter()
     router.Use(middleware.LoggerMiddleware)
+
+    router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintln(w, "Backend berhasil berjalan")
+    }).Methods(http.MethodGet)
 
     router.HandleFunc("/zoos", zooController.GetAllZoos).Methods(http.MethodGet)
     router.HandleFunc("/zoos", zooController.CreateZoo).Methods(http.MethodPost)
